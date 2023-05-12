@@ -26,8 +26,7 @@ class User(db.Model):
 
     username = db.Column(db.String(20),
                    unique=True,
-                   primary_key=True,
-                   autoincrement=True)
+                   primary_key=True)
     
     password = db.Column(db.Text,
                      nullable=False)

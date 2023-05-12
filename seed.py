@@ -2,6 +2,7 @@ from models import User, db
 from app import app
 from secret import email
 
+app.app_context().push()
 db.drop_all()
 db.create_all()
 

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Log-in{% endblock %}
+
+{% block content %}
+<div>
+    <table border="opaque">
+        <thead>
+            <th align="center">Username</th><th align="center">Email Address</th><th align="center">First Name</th><th align="center">Last Name</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td align="center">{{user.username}}</td><td align="center">{{user.email}}</td><td align="center">{{user.first_name}}</td><td align="center">{{user.last_name}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
