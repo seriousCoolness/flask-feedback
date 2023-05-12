@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, flash, session
-from models import db, connect_db, User
-from forms import RegisterUserForm, LoginUserForm
+from models import db, connect_db, User, Feedback
+from forms import RegisterUserForm, LoginUserForm, FeedbackForm
 
 app = Flask(__name__)
 
@@ -20,7 +20,10 @@ app.app_context().push()
 @app.route('/')
 def home_page():
     """Shows the home page."""
-    return redirect('/register')
+    if session.get('username'):
+        return redirect(f"/users/{session['username']}")
+    else:
+        return redirect('/register')
 
 @app.route('/register', methods=["GET", "POST"])
 def register_form():
@@ -56,10 +59,14 @@ def login_page():
 
     if form.validate_on_submit():
         username = form.username.data
+        if User.query.filter_by(username=username).count():
+            return render_template('login.html', form=form)
+
         password = form.password.data
 
         user=User.authenticate(username, password)
-
+        if not user:
+            return render_template('login.html', form=form)
         session['username'] = user.username
 
         return redirect(f'/users/{user.username}')
@@ -69,7 +76,7 @@ def login_page():
 
 @app.route('/logout')
 def logout():
-    if session['username']:
+    if session.get('username'):
         session.clear()
         return redirect('/')
     else:
@@ -79,6 +86,67 @@ def logout():
 @app.route('/users/<username>')
 def user_page(username):
     if username == session['username']:
-        return render_template('user_profile.html', user=User.query.get_or_404(username))
+        user=User.query.get_or_404(username)
+        feedbacks=Feedback.query.filter_by(username=username)
+        return render_template('user_profile.html', user=user,feedbacks=feedbacks)
     else:
         return redirect('/login')
+    
+@app.route('/users/<username>/delete', methods=["POST"])
+def delete_user(username):
+    if session['username'] == username:
+        Feedback.query.filter_by(username=username).delete()
+        User.query.filter_by(username=username).delete()
+        db.session.commit()
+        session.clear()
+        return redirect('/')
+    else:
+        return redirect('/login')
+
+@app.route('/users/<username>/feedback/add', methods=["GET","POST"])
+def add_feedback(username):
+    if session['username'] == username:
+        form=FeedbackForm()
+
+        if form.validate_on_submit():
+            title=form.title.data
+            content=form.content.data
+            
+            feedback=Feedback(title=title, content=content, username=username)
+
+            db.session.add(feedback)
+            db.session.commit()
+            return redirect(f'/users/{feedback.username}')
+        else:
+            return render_template('feedback_add.html', username=username, form=form)
+    else:
+        redirect('/')
+
+@app.route('/feedback/<int:id>/update', methods=["GET","POST"])
+def edit_feedback(id):
+    """edit existing feedback"""
+    feedback=Feedback.query.get_or_404(id)
+    if session['username'] == feedback.username:
+        form=FeedbackForm()
+
+        if form.validate_on_submit():
+            feedback.title=form.title.data
+            feedback.content=form.content.data
+        
+            db.session.commit()
+            return redirect(f'/feedback/{id}')
+        else:
+            return render_template('feedback_edit.html', id=id, form=form)
+    else:
+        redirect('/')
+
+@app.route('/feedback/<int:id>/delete', methods=["POST"])
+def delete_feedback(id):
+    feedback=Feedback.query.get_or_404(id)
+    if session['username'] == feedback.username:
+        users_name = feedback.username
+        Feedback.query.filter_by(id=id).delete()
+        db.session.commit()
+        return redirect(f'/users/{users_name}')
+    else:
+        redirect('/')

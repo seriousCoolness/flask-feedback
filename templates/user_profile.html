@@ -14,5 +14,23 @@
             </tr>
         </tbody>
     </table>
+
+    <table border="1px solid black">
+        <thead>
+            <th align="center">Feedback ID</th><th align="center">Title</th><th align="center"></th><th align="center"></th>
+        </thead>
+        <tbody>
+            {% for feedback in feedbacks %}
+            <tr>
+                <td align="center">{{feedback.id}}</td><td align="center">{{feedback.title}}</td><td align="center"><form><button formaction="/feedback/{{feedback.id}}/update" formmethod="get">Edit Feedback</button></form></td><td align="center"><form><button formaction="/feedback/{{feedback.id}}/delete" formmethod="post">Delete Feedback</button></form></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <form><button formaction="/users/{{user.username}}/feedback/add" formmethod="get">Create New Feedback</button>
+        <br>
+        <br>
+        <button formaction="/users/{{user.username}}/delete" formmethod="post">DELETE USER</button>
+    </form>
 </div>
 {% endblock %}
